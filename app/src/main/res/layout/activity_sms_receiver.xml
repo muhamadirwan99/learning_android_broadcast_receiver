@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- wrap_content pada height agar dialog hanya setinggi kontennya,
+     tidak memenuhi seluruh layar — sesuai konsep Activity bertema Dialog. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -9,6 +11,8 @@
     android:padding="16dp"
     tools:context=".SmsReceiverActivity">
 
+    <!-- Menampilkan nomor pengirim SMS. Diisi secara dinamis dari Intent extra
+         di SmsReceiverActivity, bukan hardcoded, agar sesuai SMS yang masuk. -->
     <TextView
         android:id="@+id/tv_from"
         android:layout_width="match_parent"
@@ -16,6 +20,8 @@
         android:layout_marginBottom="16dp"
         android:text="@string/coming_from" />
 
+    <!-- Menampilkan isi pesan SMS. textSize 18sp lebih besar agar mudah dibaca
+         sebagai konten utama yang paling penting di layar ini. -->
     <TextView
         android:id="@+id/tv_message"
         android:layout_width="match_parent"
@@ -24,6 +30,8 @@
         android:text="@string/this_play"
         android:textSize="18sp" />
 
+    <!-- Tombol close memanggil finish() di Activity untuk menutup dialog SMS ini
+         dan kembali ke layar sebelumnya, memberi kontrol kepada pengguna. -->
     <Button
         android:id="@+id/btn_close"
         android:layout_width="wrap_content"
