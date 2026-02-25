@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- LinearLayout vertikal dipilih karena elemen ditampilkan berurutan dari atas ke bawah:
+     nomor pengirim → isi pesan → tombol tutup, tanpa perlu constraint yang kompleks. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -9,6 +11,8 @@
     android:padding="16dp"
     tools:context=".SmsReceiverActivity">
 
+    <!-- Menampilkan nomor pengirim SMS. layout_height="wrap_content" agar tinggi
+         menyesuaikan teks dan tidak membuang ruang kosong yang tidak perlu. -->
     <TextView
         android:id="@+id/tv_from"
         android:layout_width="match_parent"
@@ -16,6 +20,8 @@
         android:layout_marginBottom="16dp"
         android:text="@string/coming_from" />
 
+    <!-- Menampilkan isi pesan SMS dengan ukuran font lebih besar (18sp)
+         agar konten utama lebih mudah dibaca sekilas oleh pengguna. -->
     <TextView
         android:id="@+id/tv_message"
         android:layout_width="match_parent"
@@ -24,6 +30,8 @@
         android:text="@string/this_play"
         android:textSize="18sp" />
 
+    <!-- layout_gravity="end" memposisikan tombol ke kanan bawah mengikuti konvensi Material Design,
+         di mana aksi konfirmasi/penutupan biasanya diletakkan di pojok kanan bawah dialog. -->
     <Button
         android:id="@+id/btn_close"
         android:layout_width="wrap_content"

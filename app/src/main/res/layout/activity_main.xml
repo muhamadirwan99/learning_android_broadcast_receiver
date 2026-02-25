@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- LinearLayout dipilih karena susunan konten hanya vertikal (teks + tombol),
+     sehingga lebih ringan dan sederhana dibanding ConstraintLayout untuk kasus ini. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -8,12 +10,16 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
+    <!-- TextView ini berfungsi sebagai instruksi/penjelasan kepada pengguna
+         tentang tujuan tombol di bawahnya, agar UX lebih jelas dan informatif. -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:text="@string/this_sms_receiver_app" />
 
+    <!-- Tombol ini memicu dialog izin RECEIVE_SMS saat ditekan.
+         layout_width="match_parent" agar tombol mudah ditekan (touch target lebih lebar). -->
     <Button
         android:id="@+id/btn_permission"
         android:layout_width="match_parent"
