@@ -10,8 +10,9 @@ import com.dicoding.mybroadcastreceiver.databinding.ActivitySmsReceiverBinding
 class SmsReceiverActivity : AppCompatActivity() {
 
     companion object {
-        // Konstanta ini berfungsi sebagai "kunci" yang disepakati antara SmsReceiver (pengirim)
-        // dan SmsReceiverActivity (penerima) agar pengambilan data dari Intent tidak salah kunci.
+        // Konstanta key untuk Intent extras — didefinisikan di sini (bukan di SmsReceiver)
+        // karena Activity inilah yang "memiliki" data tersebut dan yang paling tahu
+        // key apa yang dibutuhkan. SmsReceiver tinggal mengacu ke konstanta ini.
         const val EXTRA_SMS_NO = "extra_sms_no"
         const val EXTRA_SMS_MESSAGE = "extra_sms_MESSAGE"
     }
@@ -27,30 +28,32 @@ class SmsReceiverActivity : AppCompatActivity() {
         // secara type-safe tanpa perlu findViewById() yang rawan NullPointerException.
         binding = ActivitySmsReceiverBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        // WindowInsetsListener dipasang agar konten tidak tertutup oleh status bar atau navigation bar
-        // setelah enableEdgeToEdge() diterapkan — ini adalah penyesuaian padding yang wajib dilakukan.
+        // Padding dinamis ini penting agar konten tidak tertimpa status bar atau
+        // navigation bar, terutama di perangkat dengan notch atau gesture navigation.
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // Mengubah judul Activity di title bar agar pengguna tahu konteks tampilan ini.
+        // Mengganti judul default Activity di title bar agar pengguna tahu konteks
+        // Activity ini — menampilkan pesan masuk, bukan halaman utama app.
         title = getString(R.string.incoming_message)
 
-        // Menutup Activity ini (bukan keluar dari app) saat tombol Close ditekan,
-        // karena Activity ini hanya bersifat pop-up informatif, bukan layar utama.
+        // finish() menutup Activity ini dan kembali ke layar sebelumnya (atau home
+        // jika tidak ada back stack), memberi pengguna kendali untuk menutup notif SMS.
         binding.btnClose.setOnClickListener {
             finish()
         }
 
-        // Mengambil data yang dikirimkan oleh SmsReceiver melalui Intent extras.
-        // Kunci yang digunakan harus sama persis dengan yang dipakai saat putExtra() dipanggil.
+        // Ambil data yang "dititipkan" SmsReceiver via Intent extras.
+        // getStringExtra() aman dipakai karena kita sendiri yang mengirim data ini
+        // dan sudah memastikan key-nya cocok dengan konstanta di atas.
         val senderNo = intent.getStringExtra(EXTRA_SMS_NO)
         val senderMessage = intent.getStringExtra(EXTRA_SMS_MESSAGE)
 
-        // Menampilkan nomor pengirim menggunakan string resource berformat (@string/from)
-        // agar teks prefix ("Dari: ") bisa dilokalisasi ke berbagai bahasa.
+        // Format string dari resources dipakai agar teks bisa dilokalisasi ke bahasa lain
+        // dengan mudah — cukup ubah strings.xml tanpa menyentuh kode Kotlin ini.
         binding.tvFrom.text = getString(R.string.from, senderNo)
         // Menampilkan isi pesan SMS langsung tanpa format tambahan.
         binding.tvMessage.text = senderMessage

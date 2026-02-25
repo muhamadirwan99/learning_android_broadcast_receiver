@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- LinearLayout dipilih karena susunan konten hanya vertikal (teks + tombol),
-     sehingga lebih ringan dan sederhana dibanding ConstraintLayout untuk kasus ini. -->
+<?xml version="1.0" encoding="utf-8"?><!-- LinearLayout dengan orientation vertical dipakai agar elemen-elemen UI
+     tersusun dari atas ke bawah secara sederhana tanpa constraint kompleks. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -10,20 +9,29 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
-    <!-- TextView ini berfungsi sebagai instruksi/penjelasan kepada pengguna
-         tentang tujuan tombol di bawahnya, agar UX lebih jelas dan informatif. -->
+    <!-- TextView ini berfungsi sebagai header/judul yang memberi konteks kepada
+         pengguna tentang kegunaan halaman ini. -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:text="@string/this_sms_receiver_app" />
 
-    <!-- Tombol ini memicu dialog izin RECEIVE_SMS saat ditekan.
-         layout_width="match_parent" agar tombol mudah ditekan (touch target lebih lebar). -->
+    <!-- Tombol ini memicu permintaan izin runtime RECEIVE_SMS. Izin harus diminta
+         secara eksplisit karena termasuk kategori "dangerous permission" di Android. -->
     <Button
         android:id="@+id/btn_permission"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:text="@string/check_sms_permission" />
+
+    <!-- Tombol ini mensimulasikan aksi download dan setelah 3 detik akan mengirim
+         broadcast lokal sebagai tanda bahwa download selesai. -->
+    <Button
+        android:id="@+id/btn_download"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/download_file" />
 
 </LinearLayout>

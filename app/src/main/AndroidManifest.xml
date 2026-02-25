@@ -2,17 +2,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Mendeklarasikan bahwa app ini menggunakan fitur telepon (SMS), tapi tidak wajib ada.
-         android:required="false" memastikan app tetap bisa diinstal di tablet tanpa SIM card. -->
+    <!-- Deklarasi fitur hardware telephony sebagai opsional (required="false") agar app
+         tetap bisa diinstall di perangkat tanpa SIM/telepon, seperti tablet WiFi-only.
+         Tanpa ini, Play Store akan memblokir distribusi ke perangkat tersebut. -->
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" />
 
-    <!-- RECEIVE_SMS diperlukan agar sistem mengizinkan SmsReceiver menerima broadcast SMS_RECEIVED.
-         Tanpa izin ini, broadcast tidak akan pernah sampai ke BroadcastReceiver kita. -->
+    <!-- RECEIVE_SMS diperlukan agar sistem Android mengizinkan app ini
+         menerima broadcast SMS_RECEIVED. Tanpa izin ini, broadcast akan diblokir. -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    <!-- READ_SMS diperlukan jika kita ingin membaca isi kotak masuk SMS dari Content Provider,
-         bukan hanya dari broadcast langsung. Dicantumkan sebagai pelengkap dan keamanan. -->
+    <!-- READ_SMS diperlukan untuk mengakses isi kotak masuk SMS lewat ContentProvider.
+         Meskipun app ini tidak membuka inbox langsung, izin ini umum dipasangkan
+         dengan RECEIVE_SMS untuk keperluan verifikasi atau logging. -->
     <uses-permission android:name="android.permission.READ_SMS" />
 
     <application
@@ -25,10 +27,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyBroadcastReceiver">
 
-        <!-- Mendaftarkan SmsReceiver sebagai BroadcastReceiver ke sistem Android.
-             android:exported="true" wajib karena broadcast SMS_RECEIVED dikirim oleh sistem (proses lain).
-             android:permission memastikan hanya sistem dengan izin BROADCAST_SMS yang bisa memicunya,
-             mencegah aplikasi jahat memalsukan broadcast SMS ke app kita. -->
+        <!-- Receiver didaftarkan di Manifest agar sistem bisa membangunkan app
+             bahkan saat app tidak sedang berjalan — ini disebut "static receiver". -->
+        <!-- exported="true" wajib agar sistem Android (proses lain) bisa
+          mengirim broadcast SMS_RECEIVED ke receiver ini. -->
+        <!-- android:permission membatasi siapa yang boleh mengirim broadcast ke
+             receiver ini — hanya komponen dengan izin BROADCAST_SMS (sistem)
+             yang diizinkan, mencegah app sembarangan memalsukan broadcast SMS. -->
         <receiver
             android:name=".SmsReceiver"
             android:enabled="true"
@@ -36,23 +41,29 @@
             android:permission="android.permission.BROADCAST_SMS">
             <!-- intent-filter ini mendaftarkan SmsReceiver agar dipanggil khusus saat ada SMS masuk. -->
             <intent-filter>
+                <!-- Action ini adalah "topik" resmi Android untuk broadcast SMS masuk.
+                     Sistem akan mengirim broadcast dengan action ini setiap ada SMS baru. -->
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
 
-        <!-- SmsReceiverActivity sengaja di-set android:exported="false" karena activity ini
-             hanya boleh dibuka oleh komponen internal app (SmsReceiver), bukan dari luar. -->
+        <!-- exported="false" karena SmsReceiverActivity hanya boleh dibuka dari
+             dalam app sendiri (dipanggil oleh SmsReceiver), bukan dari app luar. -->
+        <!-- Theme Dialog membuat Activity tampil sebagai dialog melayang di atas
+             layar lain, cocok untuk notifikasi SMS tanpa mengalihkan pengguna penuh. -->
         <activity
             android:name=".SmsReceiverActivity"
             android:exported="false"
             android:theme="@style/Theme.MyBroadcastReceiver.Dialog" />
 
-        <!-- MainActivity adalah pintu masuk utama app, harus exported="true" dan memiliki
-             intent-filter MAIN + LAUNCHER agar muncul di daftar aplikasi perangkat. -->
+        <!-- exported="true" wajib untuk MainActivity karena ia adalah launcher activity
+             yang harus bisa dibuka dari home screen / app drawer sistem. -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
+                <!-- MAIN + LAUNCHER adalah kombinasi yang memberitahu sistem bahwa
+                     ini adalah pintu masuk utama app dan harus muncul di app drawer. -->
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -1,138 +1,119 @@
 # MyBroadcastReceiver
 
-Aplikasi Android yang mendemonstrasikan penggunaan **BroadcastReceiver** untuk mendeteksi dan menampilkan SMS masuk secara real-time sebagai dialog pop-up.
+Aplikasi Android sederhana untuk belajar konsep **BroadcastReceiver** — salah satu dari empat komponen utama Android.
 
 ---
 
-## Fitur
+## 🎯 Tujuan Proyek
 
-- Meminta izin runtime `RECEIVE_SMS` kepada pengguna
-- Mendengarkan broadcast sistem `SMS_RECEIVED` secara otomatis
-- Menampilkan nomor pengirim dan isi pesan SMS dalam dialog pop-up
-- Menerapkan keamanan broadcast dengan `android:permission="BROADCAST_SMS"`
+Proyek ini mendemonstrasikan dua jenis BroadcastReceiver:
+
+| Jenis | Cara Daftar | Kapan Aktif | Dipakai Untuk |
+|---|---|---|---|
+| **Static Receiver** | `AndroidManifest.xml` | Selalu, meski app tertutup | SMS masuk (`SmsReceiver`) |
+| **Dynamic Receiver** | Kode (`registerReceiver`) | Hanya saat Activity hidup | Broadcast lokal download selesai |
 
 ---
 
-## Arsitektur & Alur Kerja
+## 🏗️ Struktur Komponen
 
 ```
-Sistem Android (SMS masuk)
-        │
-        ▼ broadcast: android.provider.Telephony.SMS_RECEIVED
-  ┌─────────────┐
-  │ SmsReceiver │  ← BroadcastReceiver (komponen pasif, selalu aktif di background)
-  └──────┬──────┘
-         │ startActivity() + Intent extras (nomor & pesan)
-         ▼
-┌──────────────────────┐
-│ SmsReceiverActivity  │  ← Dialog pop-up yang menampilkan isi SMS
-└──────────────────────┘
-
-Pengguna membuka app
-        │
-        ▼
-  ┌──────────────┐
-  │ MainActivity │  ← Meminta izin RECEIVE_SMS via runtime permission
-  └──────────────┘
+app/
+├── MainActivity.kt           → Layar utama: minta izin SMS & simulasi download
+├── SmsReceiver.kt            → Static receiver: tangkap SMS masuk dari sistem
+├── SmsReceiverActivity.kt    → Tampilkan isi SMS sebagai dialog
+└── AndroidManifest.xml       → Deklarasi izin, receiver, dan activity
 ```
 
 ---
 
-## Struktur Proyek
+## 🔄 Alur Kerja
+
+### Alur 1: Menerima SMS
 
 ```
-app/src/main/
-├── AndroidManifest.xml          # Deklarasi komponen, izin, dan keamanan broadcast
-├── java/com/dicoding/mybroadcastreceiver/
-│   ├── MainActivity.kt          # Layar utama; meminta izin RECEIVE_SMS
-│   ├── SmsReceiver.kt           # BroadcastReceiver; menangkap SMS masuk dari sistem
-│   └── SmsReceiverActivity.kt   # Dialog pop-up; menampilkan nomor & isi SMS
-└── res/
-    ├── layout/
-    │   ├── activity_main.xml           # Layout layar utama (tombol izin)
-    │   └── activity_sms_receiver.xml  # Layout dialog SMS (pengirim + pesan + tombol tutup)
-    └── values/
-        └── themes.xml           # Tema app & tema Dialog untuk SmsReceiverActivity
+Sistem Android
+    │  (SMS masuk → broadcast SMS_RECEIVED)
+    ▼
+SmsReceiver.onReceive()
+    │  ekstrak nomor & isi SMS dari PDU
+    │  buat Intent + FLAG_ACTIVITY_NEW_TASK
+    ▼
+SmsReceiverActivity
+    │  tampil sebagai Dialog di atas layar apapun
+    │  pengguna klik "Close" → finish()
+    ▼
+Kembali ke layar sebelumnya
+```
+
+### Alur 2: Simulasi Download
+
+```
+Pengguna klik "Download File"
+    │
+    ▼
+Handler.postDelayed (3 detik)
+    │  simulasi proses download berjalan
+    ▼
+sendBroadcast(ACTION_DOWNLOAD_STATUS)
+    │  broadcast dikirim hanya ke package sendiri
+    ▼
+downloadReceiver.onReceive()
+    │
+    ▼
+Toast "Download Selesai"
 ```
 
 ---
 
-## Penjelasan Komponen Utama
+## 🔑 Konsep Kunci
 
-### `SmsReceiver.kt` — BroadcastReceiver
+### 1. Mengapa `FLAG_ACTIVITY_NEW_TASK`?
+BroadcastReceiver **tidak memiliki back stack**. Untuk memulai Activity dari receiver, Android mewajibkan flag ini agar Activity masuk ke task baru atau task yang sudah ada.
 
-| Konsep | Penjelasan |
-|--------|-----------|
-| `BroadcastReceiver` | Komponen Android yang "mendengarkan" event sistem tanpa perlu UI aktif |
-| `onReceive()` | Dipanggil otomatis oleh sistem saat broadcast `SMS_RECEIVED` terpicu |
-| `getMessagesFromIntent()` | Mengurai data SMS dari Intent; mengembalikan array karena SMS panjang bisa dipecah (multipart) |
-| `FLAG_ACTIVITY_NEW_TASK` | Wajib diset saat menjalankan Activity dari luar konteks Activity (BroadcastReceiver tidak punya back stack) |
+### 2. Mengapa `android:permission="BROADCAST_SMS"` di receiver?
+Ini adalah **penjaga keamanan** — hanya sistem Android yang memiliki izin `BROADCAST_SMS`, sehingga tidak ada app lain yang bisa memalsukan broadcast SMS ke app kita.
 
-### `SmsReceiverActivity.kt` — Dialog Pop-up
+### 3. Mengapa receiver dinamis di-`unregister` di `onDestroy()`?
+Receiver dinamis **tidak dibersihkan otomatis** oleh sistem. Jika tidak di-unregister, objek receiver akan tetap ada di memori meski Activity sudah hancur → **memory leak**.
 
-| Konsep | Penjelasan |
-|--------|-----------|
-| `android:theme="Dialog"` | Activity ini tampil sebagai dialog, bukan layar penuh, karena hanya bersifat notifikasi sementara |
-| `android:exported="false"` | Mencegah Activity ini dibuka oleh aplikasi lain; hanya boleh dipanggil dari internal app |
-| `EXTRA_SMS_NO / EXTRA_SMS_MESSAGE` | Konstanta sebagai "kontrak kunci" antara pengirim (SmsReceiver) dan penerima data (Activity) |
-| `finish()` | Menutup hanya Activity ini, bukan keluar dari seluruh app |
+### 4. Mengapa `RECEIVER_NOT_EXPORTED` untuk broadcast download?
+Broadcast lokal kustom (`ACTION_DOWNLOAD_STATUS`) hanya relevan di dalam app kita. Flag ini memastikan app lain tidak bisa mengirim atau menyadap broadcast tersebut.
 
-### `MainActivity.kt` — Layar Utama
+### 5. Mengapa key Intent Extra didefinisikan di `SmsReceiverActivity`?
+Karena Activity-lah yang **mengkonsumsi** data tersebut. Dengan mendefinisikan key di konsumen (bukan pengirim), kita memastikan sinkronisasi — pengirim tinggal mengacu ke konstanta yang sama.
 
-| Konsep | Penjelasan |
-|--------|-----------|
-| `registerForActivityResult()` | API modern untuk meminta izin runtime; menggantikan `onActivityResult()` yang deprecated |
-| `View.OnClickListener` | Di-implement di kelas agar satu fungsi `onClick()` mengelola semua tombol secara terpusat |
-| `RECEIVE_SMS` | Izin runtime yang **wajib** diberikan pengguna agar broadcast SMS bisa diterima app |
-
-### `AndroidManifest.xml` — Konfigurasi & Keamanan
-
-| Atribut | Penjelasan |
-|---------|-----------|
-| `android:permission="BROADCAST_SMS"` | Memproteksi SmsReceiver agar hanya sistem (bukan app jahat) yang bisa mengirim broadcast ke dalamnya |
-| `uses-feature android:required="false"` | Agar app tetap bisa diinstal di perangkat tanpa fitur telepon (misal: tablet WiFi-only) |
-| `READ_SMS` | Diperlukan jika membaca SMS dari Content Provider (kotak masuk), bukan hanya dari broadcast |
+### 6. Mengapa `getMessagesFromIntent()` mengembalikan array?
+Satu SMS panjang dipecah menjadi beberapa **PDU (Protocol Data Unit)** di level jaringan. Fungsi ini merakit ulang semua bagian menjadi objek `SmsMessage` yang utuh.
 
 ---
 
-## Izin yang Diperlukan
+## 🛡️ Izin yang Diperlukan
 
-| Izin | Tipe | Kegunaan |
-|------|------|----------|
-| `RECEIVE_SMS` | Dangerous (runtime) | Menerima broadcast saat ada SMS masuk |
-| `READ_SMS` | Dangerous (runtime) | Membaca isi kotak masuk SMS |
+```xml
+<uses-permission android:name="android.permission.RECEIVE_SMS" />
+<uses-permission android:name="android.permission.READ_SMS" />
+```
 
-> **Catatan:** Kedua izin ini termasuk kategori **dangerous permission** di Android, sehingga harus diminta secara eksplisit kepada pengguna saat runtime (bukan hanya deklarasi di Manifest).
-
----
-
-## Cara Menjalankan
-
-1. Clone atau buka proyek ini di Android Studio
-2. Hubungkan perangkat fisik atau jalankan emulator yang mendukung SMS
-3. Build & jalankan aplikasi
-4. Tekan tombol **"Check SMS Permission"** dan berikan izin yang diminta
-5. Kirim SMS ke nomor perangkat → dialog pop-up akan muncul otomatis
-
-> **Tips:** Gunakan **Extended Controls** di emulator Android Studio (ikon titik tiga → Phone) untuk mengirim SMS simulasi ke emulator tanpa nomor fisik.
+> ⚠️ `RECEIVE_SMS` adalah **dangerous permission** — pengguna harus menyetujuinya secara eksplisit saat runtime (Android 6.0+). Gunakan tombol "Check SMS Permission" di MainActivity untuk memintanya.
 
 ---
 
-## Konsep Android yang Dipelajari
+## ▶️ Cara Menjalankan
 
-- ✅ **BroadcastReceiver** — mendengarkan event sistem secara pasif
-- ✅ **Runtime Permission** — meminta izin sensitif saat aplikasi berjalan
-- ✅ **Intent & Intent Extras** — komunikasi antar komponen dengan data tambahan
-- ✅ **Activity sebagai Dialog** — menampilkan Activity dengan tema dialog
-- ✅ **View Binding** — akses view secara type-safe tanpa `findViewById()`
-- ✅ **Edge-to-Edge UI** — tampilan modern yang meluas ke area status bar & navigation bar
-- ✅ **Keamanan Broadcast** — menggunakan `android:permission` untuk memproteksi receiver
+1. Clone / buka proyek di Android Studio.
+2. Jalankan di emulator atau perangkat fisik.
+3. Klik **"Check SMS Permission"** → izinkan akses SMS.
+4. Untuk uji SMS: kirim SMS ke emulator via **Extended Controls → Phone**.
+5. Untuk uji download broadcast: klik **"Download File"** dan tunggu 3 detik.
 
 ---
 
-## Referensi
+## 🧰 Tech Stack
 
-- [Android Developers — BroadcastReceiver](https://developer.android.com/guide/components/broadcasts)
-- [Android Developers — Request App Permissions](https://developer.android.com/training/permissions/requesting)
-- [Android Developers — Telephony.Sms.Intents](https://developer.android.com/reference/android/provider/Telephony.Sms.Intents)
+- **Bahasa**: Kotlin
+- **Min SDK**: sesuai `build.gradle.kts`
+- **UI Binding**: View Binding
+- **Theme**: Material 3 (DayNight)
+- **Arsitektur**: Single Activity + BroadcastReceiver (komponen dasar Android)
 
