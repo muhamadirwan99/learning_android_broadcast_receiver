@@ -18,6 +18,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.dicoding.mybroadcastreceiver.databinding.ActivityMainBinding
 
+// View.OnClickListener di-implement di sini agar logika klik terpusat di override fun onClick(),
+// sehingga satu handler bisa mengelola banyak tombol tanpa nested lambda yang berantakan.
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     companion object {
@@ -52,6 +54,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         // enableEdgeToEdge() membuat konten app bisa melebar sampai ke area system bar
         // (status bar & navigation bar) untuk tampilan layar penuh yang modern.
         enableEdgeToEdge()
+        // View Binding di-inflate agar semua view di layout dapat diakses secara type-safe,
+        // menghindari risiko ClassCastException atau NullPointerException dari findViewById().
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         // Listener ini memastikan konten tidak tertutup oleh system bar (status/nav bar)

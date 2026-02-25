@@ -21,7 +21,11 @@ class SmsReceiverActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // enableEdgeToEdge() membuat konten tampilan meluas hingga ke area sistem (status bar & navigation bar),
+        // memberikan tampilan yang lebih imersif dan modern.
         enableEdgeToEdge()
+        // View Binding di-inflate di sini agar kita bisa mengakses semua view di layout
+        // secara type-safe tanpa perlu findViewById() yang rawan NullPointerException.
         binding = ActivitySmsReceiverBinding.inflate(layoutInflater)
         setContentView(binding.root)
         // Padding dinamis ini penting agar konten tidak tertimpa status bar atau
@@ -51,6 +55,7 @@ class SmsReceiverActivity : AppCompatActivity() {
         // Format string dari resources dipakai agar teks bisa dilokalisasi ke bahasa lain
         // dengan mudah — cukup ubah strings.xml tanpa menyentuh kode Kotlin ini.
         binding.tvFrom.text = getString(R.string.from, senderNo)
+        // Menampilkan isi pesan SMS langsung tanpa format tambahan.
         binding.tvMessage.text = senderMessage
     }
 }

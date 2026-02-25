@@ -39,6 +39,7 @@
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BROADCAST_SMS">
+            <!-- intent-filter ini mendaftarkan SmsReceiver agar dipanggil khusus saat ada SMS masuk. -->
             <intent-filter>
                 <!-- Action ini adalah "topik" resmi Android untuk broadcast SMS masuk.
                      Sistem akan mengirim broadcast dengan action ini setiap ada SMS baru. -->
